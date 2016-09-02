@@ -352,48 +352,75 @@ Though RRT can explore the whole space $A_{0}$ to get a obstacle free path to re
 
 As the shortage we tell, bi-RRT solve it by extend more steps until in collision with obstacle or reach the random point $X_{ram}$.  And bi-RRT maintain two tree in its memory, one starting extend function from the initial point and the other from the goal point. The two tree extend to each other each tiem when extend method run until they meet in the space, which is the reason the name `bi-RRT' come from. With such modification, bi-RRT take in count of the intial point and goal point together with a faster extending speed. 
 
-In our exprement, we just take the more steps extending thought into our code. Our extend method is like in Fig.3:
+In our exprement, we just take the more steps extending thought into our code. Our multi-extend algorithm is like in Fig.3:
 
+\begin{figure}[thpb]
+      \centering
+      \framebox{
+      \parbox{3in}
+      {
+      $
+      multi\_extend(T, X_{rand})\\
+      1.\ [X_{new}, result] = extend(T, X_{rand});\\
+      2.\ if\ result = fail\ or\ collisionTest(X_{new}) = 0\\
+      3.\qquad return\ fail;\\
+      4.\ while\ result = success \\
+      5.\ \{ \\
+      6.\qquad [X_{new}, result] = extend(X_{new}, X_{rand});\\
+      \begin{aligned}
+      7.\qquad if\ collision&Test(X_{new}) = 0\ or\ \\ &surpass(X_{new}, X_{rand})\\
+      \end{aligned} \\
+      8.\qquad \qquad break; \\
+      9.\ \} \\
+      10.\ return\ success.
+      $
+	 }
+}
+      \caption{multi-step extend pseudocode}
+      \label{figurelabe3}
+\end{figure}
 
+The function `$surpass(X_{new},X_{rand})$' detect that if $X_{new}$ is near enough to $X_{rand}$. The `true' return for this function means the two points are close enough, then `multi\_extend' method will be stop, and the `false' return will continue the extending process.  With these change, if the extend direction is correct, we could get faster to the goal point, but simutaneously, we would also extend further to a bad direction, which would take up more time if this situation happens frequently. We solve this problem with RRT-GD (RRT with goal-direction), which will be related in the later paragraph. But within our process now, we have two extend functions: extend and multi-extend, and we can think of the inverse kinematics optimization, which will be discuss first.
 
-\subsection{Equations}
+\section{Inverse Kinematics with Newton-Raphson method}
 
-The equations are an exception to the prescribed specifications of this template. You will need to determine whether or not your equation should be typed using either the Times New Roman or the Symbol font (please no other font). To create multileveled equations, it may be necessary to treat the equation as a graphic and insert it into the text after your paper is styled. Number equations consecutively. Equation numbers, within parentheses, are to position flush right, as in (1), using a right tab stop. To make your equations more compact, you may use the solidus ( / ), the exp function, or appropriate exponents. Italicize Roman symbols for quantities and variables, but not Greek symbols. Use a long dash rather than a hyphen for a minus sign. Punctuate equations with commas or periods when they are part of a sentence, as in
+We have related some inverse kinematics method before, e.g., GP (gradient projection method), WLN (weighted least norm method), MLG (Method of Lowest Gradient)[6]. Within our program, we take Newton-Raphson method into account, for its high accuracy and speed. 
+
+\subsection{Newton-Raphson method}
+
+We reminded back to our inverse kinematics problem: we know $S_{0}$ (and so $X_{0}$ can be compute) and $X_{g}$, how could we compute $S_{g}$? In Newton-Raphson method, which is an iteration method, each time we just go straight from the current point to goal point. We can see the iteration equation in (16):
 
 $$
-\alpha + \beta = \chi \eqno{(1)}
-$$
+S_{n+1} = S_{n} + J^{+} \times minus(X_{g}, X_{n}).
+\eqno(16)
+$$ 
 
-Note that the equation is centered using a center tab stop. Be sure that the symbols in your equation have been defined before or immediately following the equation. Use �(1)�, not �Eq. (1)� or �equation (1)�, except at the beginning of a sentence: �Equation (1) is . . .�
+The current status and pose are written as $S_{n}$ and $X_{n}$, and $J^{+}$ is also relative to the current point, which can be compute in (10). Then when $X_{n}$ is close enough to $X_{g}$, we get the answer $S_{n}$ as result $S_{g}$. Note that though the function name called `minus', it dost just not simple minus as $X_{g} - X_{n}$, because the azimuth doesn't supplement the minus operation. We should use the Rotate-By-1-Axis method to get the corret answer, since the combination of fix-axis rotation of rigid body can be seen as one-time fix-axis.
 
-\subsection{Some Common Mistakes}
-\begin{itemize}
+After this work, we take down the Newton-Raphson method as Fig. 4:
 
+\begin{figure}[thpb]
+      \centering
+      \framebox{
+      \parbox{3in}
+      {
+      $
+      Newton\_Raphson(S_{0}, X_{g})\\
+      1.\ compute\ X_{0}\ and\ J^{+}; i = 0; times = 0;\\
+      2.\ while\ \epsilon < rrtDistance(X_{i}, X_{g})\ and\ times < N\\
+      3.\ \{ \\
+      4.\qquad S_{i+1} = S_{i} + J^{+}\times minus(X_{g}, X_{i});\\
+      5.\qquad i = i + 1;times = times + 1;\\
+      6.\qquad compute\ X_{i}\ and\ J^{+};\\
+      7.\ \}
+      $
+	 }
+}
+      \caption{multi-step extend pseudocode}
+      \label{figurelabe4}
+\end{figure}
 
-\item The word �data� is plural, not singular.
-\item The subscript for the permeability of vacuum ?0, and other common scientific constants, is zero with subscript formatting, not a lowercase letter �o�.
-\item In American English, commas, semi-/colons, periods, question and exclamation marks are located within quotation marks only when a complete thought or name is cited, such as a title or full quotation. When quotation marks are used, instead of a bold or italic typeface, to highlight a word or phrase, punctuation should appear outside of the quotation marks. A parenthetical phrase or statement at the end of a sentence is punctuated outside of the closing parenthesis (like this). (A parenthetical sentence is punctuated within the parentheses.)
-\item A graph within a graph is an �inset�, not an �insert�. The word alternatively is preferred to the word �alternately� (unless you really mean something that alternates).
-\item Do not use the word �essentially� to mean �approximately� or �effectively�.
-\item In your paper title, if the words �that uses� can accurately replace the word �using�, capitalize the �u�; if not, keep using lower-cased.
-\item Be aware of the different meanings of the homophones �affect� and �effect�, �complement� and �compliment�, �discreet� and �discrete�, �principal� and �principle�.
-\item Do not confuse �imply� and �infer�.
-\item The prefix �non� is not a word; it should be joined to the word it modifies, usually without a hyphen.
-\item There is no period after the �et� in the Latin abbreviation �et al.�.
-\item The abbreviation �i.e.� means �that is�, and the abbreviation �e.g.� means �for example�.
-
-\end{itemize}
-
-
-\section{USING THE TEMPLATE}
-
-Use this sample document as your LaTeX source file to create your document. Save this file as {\bf root.tex}. You have to make sure to use the cls file that came with this distribution. If you use a different style file, you cannot expect to get required margins. Note also that when you are creating your out PDF file, the source file is only part of the equation. {\it Your \TeX\ $\rightarrow$ PDF filter determines the output file size. Even if you make all the specifications to output a letter file in the source - if your filter is set to produce A4, you will only get A4 output. }
-
-It is impossible to account for all possible situation, one would encounter using \TeX. If you are using multiple \TeX\ files you must make sure that the ``MAIN`` source file is called root.tex - this is particularly important if your conference is using PaperPlaza's built in \TeX\ to PDF conversion tool.
-
-\subsection{Headings, etc}
-
-Text heads organize the topics on a relational, hierarchical basis. For example, the paper title is the primary text head because all subsequent material relates and elaborates on this one topic. If there are two or more sub-topics, the next level head (uppercase Roman numerals) should be used and, conversely, if there are not at least two sub-topics, then no subheads should be introduced. Styles named �Heading 1�, �Heading 2�, �Heading 3�, and �Heading 4� are prescribed.
+On Fig.4, the first and 6th line use (6) and (10) to compute it. Here we use N (we set it to 10 in program) to limit the iteration time, for the fact that Newton-Raphson method would always get the correct answer in less than 10 iteration times with accuracy of micrometer, otherwise it would fail with bias greater than $\epsilon$, i.e., more iteration times have no use cause it can't improve the accuracy.  
 
 \subsection{Figures and Tables}
 
