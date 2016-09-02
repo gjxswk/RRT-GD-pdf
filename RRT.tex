@@ -420,39 +420,18 @@ After this work, we take down the Newton-Raphson method as Fig. 4:
       \label{figurelabe4}
 \end{figure}
 
-On Fig.4, the first and 6th line use (6) and (10) to compute it. Here we use N (we set it to 10 in program) to limit the iteration time, for the fact that Newton-Raphson method would always get the correct answer in less than 10 iteration times with accuracy of micrometer, otherwise it would fail with bias greater than $\epsilon$, i.e., more iteration times have no use cause it can't improve the accuracy.  Text
+On Fig.4, the first and 6th line use (6) and (10) to compute it. Here we use N (we set it to 10 in program) to limit the iteration time, for the fact that Newton-Raphson method would always get the correct answer in less than 10 iteration times with accuracy of micrometer, otherwise it would fail with bias greater than $\epsilon$, i.e., more iteration times have no use cause it can't improve the accuracy.  
 
-\subsection{Figures and Tables}
+\subsection{Compare with MLG}
 
-Positioning Figures and Tables: Place figures and tables at the top and bottom of columns. Avoid placing them in the middle of columns. Large figures and tables may span across both columns. Figure captions should be below the figures; table heads should appear above the tables. Insert figures and tables after they are cited in the text. Use the abbreviation �Fig. 1�, even at the beginning of a sentence.
-
-\begin{table}[h]
-\caption{An Example of a Table}
-\label{table_example}
-\begin{center}
-\begin{tabular}{|c||c|}
-\hline
-One & Two\\
-\hline
-Three & Four\\
-\hline
-\end{tabular}
-\end{center}
-\end{table}
+At the beginning, we have complement the MLG method before using Newton-Raphson method for inverse-optimization. Here, we introduce MLG method and compare it with Newton-Raphson method, to see some great properties of Newton-Raphson.
 
 
-   \begin{figure}[thpb]
-      \centering
-      \framebox{\parbox{3in}{We suggest that you use a text box to insert a graphic (which is ideally a 300 dpi TIFF or EPS file, with all fonts embedded) because, in an document, this method is somewhat more stable than directly inserting a picture.
-}}
-      %\includegraphics[scale=1.0]{figurefile}
-      \caption{Inductance of oscillation winding on amorphous
-       magnetic core versus DC bias magnetic field}
-      \label{figurelabel}
-   \end{figure}
-   
+\section{Quintic Polynomial with path smoothing}
 
-Figure Labels: Use 8 point Times New Roman for Figure labels. Use words rather than symbols or abbreviations when writing Figure axis labels to avoid confusing the reader. As an example, write the quantity �Magnetization�, or �Magnetization, M�, not just �M�. If including units in the label, present them within parentheses. Do not label axes only with units. In the example, write �Magnetization (A/m)� or �Magnetization {A[m(1)]}�, not just �A/m�. Do not label axes with a ratio of quantities and units. For example, write �Temperature (K)�, not �Temperature/K.�
+
+
+\section{RRT-GD to adapt the use}
 
 \section{CONCLUSIONS}
 
