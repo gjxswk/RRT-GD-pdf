@@ -1,0 +1,499 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                          % you want to use the \thanks command
+
+\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+%\usepackage{amsmath} % assumes amsmath package installed
+%\usepackage{amssymb}  % assumes amsmath package installed
+
+\usepackage{graphics}
+\usepackage{amsmath} 
+\usepackage{amssymb}
+
+\def\degree{${}^{\circ}$}
+	  
+\title{\LARGE \bf
+Robot Path Planning Using Newton-Raphson method Based on RRT-GD
+}
+
+
+\author{Albert Author$^{1}$ and Bernard D. Researcher$^{2}$% <-this % stops a space
+\thanks{*This work was not supported by any organization}% <-this % stops a space
+\thanks{$^{1}$Albert Author is with Faculty of Electrical Engineering, Mathematics and Computer Science,
+        University of Twente, 7500 AE Enschede, The Netherlands
+        {\tt\small albert.author@papercept.net}}%
+\thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
+        Dayton, OH 45435, USA
+        {\tt\small b.d.researcher@ieee.org}}%
+}
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+
+We proposed a method on 7-arm redundant manipulator for obstacle-avoiding path planning. As we all know, RRT (rapidly-exploring random tree) method can perform well when doing obstacle-avoiding works. But the traditional RRT method concentrates mainly on the status space(S-space), it can’t predict the end actuator’s trajectory, thus ending up with the separation between end actuator and robot joints. In this paper, we use RRT method in the configuration space(C-space), concentrating on both the end actuator’s status and the joints’ movements. In order to reduce the time for path planning, i.e., reduce the steps when doing RRT, we change RRT algorithm to be goal-direction (we call it RRT-GD), adapt to our common works. With this improve, we can see in this paper that result could be reached in less than 10 steps usually, while the original RRT algorithm needs often more than 100 steps doing the same task. In addition, we apply Newton-Raphson method to RRT to do inverse kinematics optimization, thus we can focus on both the S-space and C-Space. In the end, we use quintic polynomial to smooth the planning path.
+
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+As we all know, RRT (Rapidly-exploring random tree) is rapidly used in obstacle-avoiding path planning for redundant manipulator. It constructs a graph of obstacle free points in feasible space based on random sampling, in which we search the feasible path from the initial point to goal point. As a result of this, there are some great properties with RRT method compared to other obstacle-avoiding method:
+\begin{itemize}
+\item RRT method attends to explore unknown space. 
+\item The graph constructed by RRT will gradually fill up the feasible space if the exploring times is enough.
+\item RRT method don’t need precise modeling, instead, it only needs the information that if a point is obstacle free through collision detect. Thus ending up with the high efficiency of obstacle free planning.
+\end{itemize}
+
+Though it has these advantages, RRT will still perform low planning success rate when there is a great deal of obstacle surround, or the free degree of manipulator is high. In this way, Kuffner proposed a bidirectional RRT algorithm, bi-RRT, also called RRT-connect. Within this method, two trees were built based on the initial point and goal point separately. When expanding each time, the tree of initial point will extend to the other tree, or the contrary way, until the two trees meets. For it has goal heuristic, it improves the success rate of path planning.  
+
+In spite of these advantages of RRT and its modified algorithm, we still find it defective sometimes in doing our common works. As mentioned before, RRT attends to explore unknown space, so that it could exploring the whole free space. But we just don’t need to explore the whole space when doing simply goal-reaching works. In this way, all we need to do is to find a feasible way from initial point to goal point without obstacle collision, i.e., we only need to explore a part of the whole space include initial point, goal point, and some obstacle. Thus we proposed RRT-GD (RRT with goal-directionality), using the train of thought above. As we can see later in this paper, by doing this way, we can get the result rapidly, usually ten times faster than the normal RRT method.
+
+As we doing RRT in C-space (configuration space), we need to compute the joint angles of each point in the path tree, i.e. inverse kinematics optimization. There are also a lot of methods to do inverse kinematics optimization, e.g., GP (gradient projection method), WLN (weighted least norm	 method), extended Jacobi method, etc. In this paper, we adopt Newton-Raphson method to do this inverse kinematics optimization work. Compared to other methods, Newton-Raphson method performs faster and more accurate. Provided the result can get by Newton-Raphson method, it would take only less than 10 iteration times (usually 5 or 6 times), with bias less than micro-meters. 
+
+After we get the path from initial point to goal point, with detailed status information (pose \& joint angles), we then use quintic polynomial to smooth the path [9]. We show our results in the experiment result part of this paper, and then make comparison with the other methods mentioned above.  
+
+We organize this paper according to our experiment process, to show our results more fluently. First, we discuss the basic mathematics knowledge and algorithm we use, include RRT and its modified method in more detail. Then, we introduce Newton-Raphson method in inverse kinematics by using the normal RRT method. After that, we present quintic polynomial method in smoothing path. Later, in order to accelerate the planning time and doing works real-time, we propose RRT-GD method, which press more close to our work in common use.
+
+\section{Experiment Environment}
+
+All the results we show is based on a redundant robot arm. Before introduce our algorithm, we can have a look at the basic environment.
+
+\subsection{Robot Model \& Its Relevant Variables (Heading 2)}
+
+We use a 7-arm redundant robot manipulator to test the results in our experiment. We use the DH method (Denavit and Har- tenberg method) to model our robot arm, with the model axis built obeying D-H parameter method as the Fig.1 show.
+
+   \begin{figure}[thpb]
+      \centering
+      \framebox{\parbox{2.2in}
+      {\includegraphics{robotaxis.eps}
+}}
+      \caption{Robot axis coordinates, obeying D-H parameter method, numbers in the graph is in milimeter.}
+      \label{figurelabel}
+   \end{figure}
+   
+As a result of this axis coordinates, we get the DH parameters as follow (show in table 1) :
+
+\begin{table}[h]
+\caption{DH Parameters of robot.}
+\label{table1}
+\begin{center}
+\begin{tabular}{c|ccccc}
+\hline
+Joint Number & $\theta_i$ & $d_i$(mm) & $a_i$(mm) & ${\alpha_i}$(\degree) & area of $\theta_i$(\degree) \\
+\hline
+1 & $q_1$ & 300 & 0 & -90 & -180$\sim$180\\
+2 & $q_2$ & 0 & 0 & 90 & -90$\sim$90 \\
+3 & $q_3$ & 328 & 0 & -90 & -180$\sim$180\\
+4 & $q_4$ & 0 & 0 & 90 & -120$\sim$120\\
+5 & $q_5$ & 277 & 0 & -90 & -180$\sim$180\\
+6 & $q_6$ & 0 & 0 & 90 & -120$\sim$120\\
+7 & $q_7$ & 310 & 0 & 0 & -180$\sim$180\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+In table 1, $\theta$ means joint angle, the letter `d' means  connecting rod skew, 'a' means length of connecting rod, and $\alpha$ means tortuosity angle of connecting rod.
+
+All our later works are based on table 1 and fig.1,  including experiments and simulation. As we can see in fig.1, the joint angles from $q_1$ to $q_7$ are the free variables and the others are fixed within our experiments. So when we write rotation and translation matrix in homogeneous way, which is a 4$\times$4 matrix, we can get the transformation equation from current coordinate ($x_i$, $y_i$, $z_i$) to the next coordinate ($x_{i+1}$, $y_{i+1}$, $z_{i+1}$) as below:
+
+$$
+\begin{array}{cc}
+^{i-1}T_{i} = A_{i} = &Rot(z, \theta_{i})\cdot \ Trans(0, 0, d_{i}) \ \cdot \\\ &Trans(a_{i}, 0, 0) \ \cdot \ Rot(x, \alpha_{i}). \\\ 
+\end{array}
+  \eqno({1})
+$$ 
+
+Among (1), Rot(z, $\theta$) means homogeneous transformation matrix when rotate the current coordinate $\theta$ degree around z-axis, and Trans(x, y, z) means homogeneous transformation matrix when transform the current cordiante with the vector $\vec{v} = (x, y, z)$. 
+
+Then, we can get the transformation matrix from base coordinate ($x_0$, $y_0$, $z_0$) to the end manipulator coordinate ($x_7$, $y_7$, $z_7$) as follow:
+
+$$
+M \ = \ ^{0}T_{1} \ ^{1}T_{2} \ldots ^{6}T_{7} \eqno({2})
+$$
+\subsection{Status Space \& Configuration Space}
+
+Status Space is expressed with 7 parameters from $q_1$ to $q_7$, with the expression like this:
+
+$$
+S \ = \ (q_{1}, q_{2}, \ ...  \ , q_{7}) \eqno({3})
+$$
+
+As for the configuration space, i.e., pose space, we use Euler angles that obeys Euler Z-X-Z transformation rules to express the azimuth angles, which displays like $\gamma = (\psi, \theta, \phi)$. Position writes like $P=(x,y,z)$. Get the position and Euler angles together, we define the expression of pose like this:
+
+$$
+X = (P,\gamma) = (x,y,z,\psi,\theta,\phi) \eqno({4})
+$$
+
+See that S is expressed with 7 free variables while X with 6,  which tells the redundancy of our system, on which our work is based. 
+
+\subsection{Forward Kinematics \& Jacobian Matrix}
+
+As we can see in (2) \& (3),  M is decided by the current state S,  thus the current pose X is also decided. When we transform X into homogeneous matrix defined as $H(X)$ and write M as $M(S)$ (means M is decided by S), we get the connection between S and X:
+
+$$
+H(X) = M(S) \eqno({5})
+$$
+
+That is what our forward kinematics based on. Knowing the current S, we can get $M(S)$ from (2), then use (5) to get X. The detail operation from H(X) to X will not be discussed here, which can be easily found in primary textbook of robot kinematics. Combineg the process of  turning $H(X)$ to X in M, we can finally get forward kinematics as below:
+
+$$
+X = M(S) \eqno({6})
+$$ 
+
+The letter M in (6) is not the same meaning with (2) \& (5), which combining the process from $H(X)$ to X. We can see M here in (6) as just a function with independent variables S and dependent variables X.
+
+\subsection{Inverse Kinematics \& the Extend Inverse Jocobian Matrix}
+
+Inverse kinematics comes with the question: How could we get S when we know X? Since the system is reduntant, there may not be only one answer for S.  There are methods from X to S directly using fixed angle, but we do inverse kinematics with the help of Jacobian matrix instead. 
+
+Looking back at (6), we write M in partial form: 
+
+$$
+X = 
+\left[
+\begin{array}{c}
+X_{1} \\
+X_{2} \\
+X_{3} \\
+X_{4} \\
+X_{5} \\
+X_{6} \\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+M_{1}(q_{1}, q_{2}, \ldots , q_{7}) \\
+M_{2}(q_{1}, q_{2}, \ldots , q_{7}) \\
+M_{3}(q_{1}, q_{2}, \ldots , q_{7}) \\
+M_{4}(q_{1}, q_{2}, \ldots , q_{7}) \\
+M_{5}(q_{1}, q_{2}, \ldots , q_{7}) \\
+M_{6}(q_{1}, q_{2}, \ldots , q_{7}) \\
+\end{array}
+\right]
+\eqno({7})
+$$
+
+The Jacobian Matrix is defined as (8):
+
+$$
+\begin{array}{ll}
+J & = (\frac{\partial M}{\partial q_{1}},\frac{\partial M}{\partial q_{2}}, \ \ldots  \ , \frac{\partial M}{\partial q_{7}})   \\
+\\
+& = 
+\left[
+\begin{array}{cccc}
+\frac{\partial M_{1}}{\partial q_{1}}, & \frac{\partial M_{1}}{\partial q_{2}}, & \ldots & \frac{\partial M_{1}}{\partial q_{7}} \\
+\frac{\partial M_{2}}{\partial q_{1}}, & \frac{\partial M_{2}}{\partial q_{2}}, & \ldots & \frac{\partial M_{2}}{\partial q_{7}} \\
+\vdots & \vdots & \ddots & \vdots \\
+\frac{\partial M_{6}}{\partial q_{1}}, & \frac{\partial M_{6}}{\partial q_{2}}, & \ldots & \frac{\partial M_{6}}{\partial q_{7}} \\
+\end{array}
+\right]
+\\
+\end{array}
+\eqno({8}) 
+$$
+
+In our expremental environment, the Jacobian matrix should be a 6$\times$7 matrix for 6 pose variables and 7 joint angle variables, but which is not the same with all redundant manipulator. Then we get the relation between X and S in differential way:
+
+$$
+\dot{X} = J\dot{S} = J(\dot{q_{1}}, \dot{q_{2}}, \ldots, \dot{q_{7}}) \eqno({9})
+$$
+
+We can't use the direct inverse matrix of J to do inverse kinematics, but can do it with the generalized inverse matrix of J ($J^{+}$) defined like this:
+
+$$
+J^{+} = J^{T}(JJ^{T})^{-1} \eqno({10})
+$$
+
+In generalized form, we have:
+
+$$
+\dot{S} = J^{+}\dot{X} \eqno({11})
+$$
+$$
+S - S_{0} = \Delta S = J^{+}\Delta X = J^{+} (X - X_{0}) \eqno({12})
+$$
+
+In this way, when knowing the initial pose $X_{0}$, very near pose X, and the initial $S_{0}$, we can compute the status S relative to X according to (11)(12), which is our inverse kinematics based on, both for MLG and Newton-Raphson method we will introduce later.
+
+\section{RRT with extended steps}
+
+Since we use modified RRT to do obstacle-avoiding path planning, we can have a look at the initial RRT method to better understand the results. In this chapter, we introduce RRT and relevant algorithm in a more detail way.
+
+\subsection{Pre-define before RRT}
+
+We define the relevant collection and functions below of RRT before looking at its sudocode. Remind the basic problem RRT do with first:  how can we run the manipulator from the initial position (knowing $X_{0}$ \& $S_{0}$) to the goal position (only knowing pose of end position, taken down as $X_{g}$) without collision into the obstacle in the space? The following collection are defined to express RRT in convenience:
+
+\begin{itemize}
+
+\item $A_{0}$: whole pose space which can be reached by robot manipulator in configuration space.
+
+\item $A_{free}$: free space belong to $A_{0}$, i.e., $A_{free} \in A_{0}$, and there is no obstacle in $A_{free}$. 
+
+\item $A_{obs}$: space of obstacle, i.e., $A_{obs} = A_{0}  \backslash A_{free}$.
+
+\item $B_{0}, B_{free}, B{obs}$: these are the corresponding collection with A, but in the status space. The subscript takes the same meaning as in A.
+
+\end{itemize}
+
+Below define the main functions used in RRT. Before we focus on these functions, we should remind that RRT method will build a tree when it runs, we called it RRT tree, writen as tree $T$, with the initial point $X_{0}$ for pose and  $S_{0}$ for status as the first tree point. We note that: $T = (V, E)$, while V is for all points and E is the relation between these points (father point and its child). Note that T is a tree, so each point has no more than one child.
+
+\begin{itemize}
+
+\item sample:  generate a random point $X_{ram}$ in pose format in $A_{free}$.
+
+\item distance:  compute the distance of two points in $A_{0}$. Within our work, this distance is defined as the Euclid distance.
+
+\item nearest\_neighbor: given the point X, this function return the nearest point $X_{near}$ in tree $T$.
+
+\item steer: given the random point $X_{ram}$ and $X_{near}$, this function return a new point $X_{new}$ in $A_{free}$, whihc is nearer to $X_{ram}$ than $X_{near}$.
+
+\item collisionTest: given point $X$, return 1 for obstacle free and 0 for obstacle collision. 
+
+\end{itemize}
+
+\subsection{RRT and its relative functions}
+
+Then we can have a look at the basic algorithm of RRT. We write it in pseudocode show in Fig.2:
+
+\begin{figure}[thpb]
+      \centering
+      \framebox{
+      \parbox{3in}
+      {
+      $
+      RRT (S_{0}, A_{0})\\
+      1.\ V \leftarrow \{S_{0}\}; E \leftarrow \o; i \leftarrow 0;\\
+      2.\ while\ i < N\ do \\
+      3.\ \{ \\
+      4.\qquad T \leftarrow (V,\ E); \\
+      5.\qquad X_{rand} \leftarrow sample(i); i \leftarrow i+1; \\
+      6.\qquad T \leftarrow extend(T, X_{rand});\\
+      7.\ \} \\
+      $
+      \\
+      $
+      extend(T, X_{rand}) \\
+      1.\ X_{near}=  nearest\_neighbor(T, X_{rand});\\
+      2.\ X_{new} = steer(X_{near}, X_{rand});\\
+      3.\ if\ X_{new}\ and\ collisionTest(X_{new})\\\
+      4.\qquad V \leftarrow V \cup \{X_{new}\};\\
+      5.\qquad E \leftarrow E \cup \{(X_{near}, X_{new})\};\\
+      5.\qquad return\ success;\\
+      6.\ else\\
+      7.\qquad return\ fail;
+      $
+	 }
+}
+      \caption{pseudocode of RRT algorithm.}
+      \label{figurelabe2}
+\end{figure}
+ 
+ Though simple as it is, RRT work well with obstacle-avoiding task. Here, we focus on the detail of the basic functions specially, for they will be related later in this paper. As defined before, we use Euclid distance but make a little change, named rrtDistance, that is defined bellow with (13):
+ 
+
+ $$
+   \begin{aligned}
+ rrtDistance(X_{1},X_{2})=\alpha ||P_{1}-P_{2}|| + (1-\alpha) ||\gamma_{1}-\gamma_{2}||, &\\
+ 0 < \alpha < 1. \qquad (13)
+    \end{aligned}
+ $$
+
+   
+ Since we concentrate more on the accuracy of position, we mainly choose $\alpha > 0.5$, like $\alpha = 0.8$, which is use in our program.  The sample function generate a point in $A_{0}$, we use $X_{min}$ and $X_{max}$ to limit area of $A_{0}$. Then the random point $X_{ram}$ that sample function produce will be like (14):
+ 
+ $$
+ X_{ram} = X_{min} + t \times (X_{max}-X_{min}), 0<t<1;
+ \eqno({14})
+ $$
+ 
+When t is randomly produce in interval (0, 1), sample method would produce all the points of $A_{0}$. For steer function, a new point $X_{new}$ will be produce depending on $X_{near}$ and $X_{ram}$,  which works like (15):
+ 
+ $$
+ \begin{aligned}
+ X_{new} = X_{near} + s(X_{ram}-X_{near})/||X_{ram}-X_{near}||,&\\
+ 0<k<||X_{ram}-X_{near}||.\qquad (15)&\\
+ \end{aligned}
+ $$
+ 
+ We call $s$ in (15) the step-length. In RRT algorithm, each step when steer function run, the RRT tree $T$ will attend to explore forward $s$ distance in $A_{0}$. Cause $X_{rand}$ will be anywhere in the whole space, it is easy to infer that the direction tree $T$ extends is all-dimension, i.e., no certain direction, but different direction with different time, reminded that is important cause we will discuss it later.
+ 
+\subsection{modified RRT algorithm}
+
+Though RRT can explore the whole space $A_{0}$ to get a obstacle free path to reach the goal point, it still has some shortage when it actually run. Since RRT extends only one step (with step-length $s$) further, it seems slow sometimes when $A_{0}$ is big enough. On the other point, RRT tree are built beginning with the initial point, leaving out the goal point in the tree-built process. Still, there are also other insufficients with RRT, which results in many modified RRT method. Here, we present bi-RRT as an example. The detail bi-RRT algorithm can be seen in [12]. We just take it in brief here.
+
+As the shortage we tell, bi-RRT solve it by extend more steps until in collision with obstacle or reach the random point $X_{ram}$.  And bi-RRT maintain two tree in its memory, one starting extend function from the initial point and the other from the goal point. The two tree extend to each other each tiem when extend method run until they meet in the space, which is the reason the name `bi-RRT' come from. With such modification, bi-RRT take in count of the intial point and goal point together with a faster extending speed. 
+
+In our exprement, we just take the more steps extending thought into our code. Our extend method is like in Fig.3:
+
+
+
+\subsection{Equations}
+
+The equations are an exception to the prescribed specifications of this template. You will need to determine whether or not your equation should be typed using either the Times New Roman or the Symbol font (please no other font). To create multileveled equations, it may be necessary to treat the equation as a graphic and insert it into the text after your paper is styled. Number equations consecutively. Equation numbers, within parentheses, are to position flush right, as in (1), using a right tab stop. To make your equations more compact, you may use the solidus ( / ), the exp function, or appropriate exponents. Italicize Roman symbols for quantities and variables, but not Greek symbols. Use a long dash rather than a hyphen for a minus sign. Punctuate equations with commas or periods when they are part of a sentence, as in
+
+$$
+\alpha + \beta = \chi \eqno{(1)}
+$$
+
+Note that the equation is centered using a center tab stop. Be sure that the symbols in your equation have been defined before or immediately following the equation. Use �(1)�, not �Eq. (1)� or �equation (1)�, except at the beginning of a sentence: �Equation (1) is . . .�
+
+\subsection{Some Common Mistakes}
+\begin{itemize}
+
+
+\item The word �data� is plural, not singular.
+\item The subscript for the permeability of vacuum ?0, and other common scientific constants, is zero with subscript formatting, not a lowercase letter �o�.
+\item In American English, commas, semi-/colons, periods, question and exclamation marks are located within quotation marks only when a complete thought or name is cited, such as a title or full quotation. When quotation marks are used, instead of a bold or italic typeface, to highlight a word or phrase, punctuation should appear outside of the quotation marks. A parenthetical phrase or statement at the end of a sentence is punctuated outside of the closing parenthesis (like this). (A parenthetical sentence is punctuated within the parentheses.)
+\item A graph within a graph is an �inset�, not an �insert�. The word alternatively is preferred to the word �alternately� (unless you really mean something that alternates).
+\item Do not use the word �essentially� to mean �approximately� or �effectively�.
+\item In your paper title, if the words �that uses� can accurately replace the word �using�, capitalize the �u�; if not, keep using lower-cased.
+\item Be aware of the different meanings of the homophones �affect� and �effect�, �complement� and �compliment�, �discreet� and �discrete�, �principal� and �principle�.
+\item Do not confuse �imply� and �infer�.
+\item The prefix �non� is not a word; it should be joined to the word it modifies, usually without a hyphen.
+\item There is no period after the �et� in the Latin abbreviation �et al.�.
+\item The abbreviation �i.e.� means �that is�, and the abbreviation �e.g.� means �for example�.
+
+\end{itemize}
+
+
+\section{USING THE TEMPLATE}
+
+Use this sample document as your LaTeX source file to create your document. Save this file as {\bf root.tex}. You have to make sure to use the cls file that came with this distribution. If you use a different style file, you cannot expect to get required margins. Note also that when you are creating your out PDF file, the source file is only part of the equation. {\it Your \TeX\ $\rightarrow$ PDF filter determines the output file size. Even if you make all the specifications to output a letter file in the source - if your filter is set to produce A4, you will only get A4 output. }
+
+It is impossible to account for all possible situation, one would encounter using \TeX. If you are using multiple \TeX\ files you must make sure that the ``MAIN`` source file is called root.tex - this is particularly important if your conference is using PaperPlaza's built in \TeX\ to PDF conversion tool.
+
+\subsection{Headings, etc}
+
+Text heads organize the topics on a relational, hierarchical basis. For example, the paper title is the primary text head because all subsequent material relates and elaborates on this one topic. If there are two or more sub-topics, the next level head (uppercase Roman numerals) should be used and, conversely, if there are not at least two sub-topics, then no subheads should be introduced. Styles named �Heading 1�, �Heading 2�, �Heading 3�, and �Heading 4� are prescribed.
+
+\subsection{Figures and Tables}
+
+Positioning Figures and Tables: Place figures and tables at the top and bottom of columns. Avoid placing them in the middle of columns. Large figures and tables may span across both columns. Figure captions should be below the figures; table heads should appear above the tables. Insert figures and tables after they are cited in the text. Use the abbreviation �Fig. 1�, even at the beginning of a sentence.
+
+\begin{table}[h]
+\caption{An Example of a Table}
+\label{table_example}
+\begin{center}
+\begin{tabular}{|c||c|}
+\hline
+One & Two\\
+\hline
+Three & Four\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+   \begin{figure}[thpb]
+      \centering
+      \framebox{\parbox{3in}{We suggest that you use a text box to insert a graphic (which is ideally a 300 dpi TIFF or EPS file, with all fonts embedded) because, in an document, this method is somewhat more stable than directly inserting a picture.
+}}
+      %\includegraphics[scale=1.0]{figurefile}
+      \caption{Inductance of oscillation winding on amorphous
+       magnetic core versus DC bias magnetic field}
+      \label{figurelabel}
+   \end{figure}
+   
+
+Figure Labels: Use 8 point Times New Roman for Figure labels. Use words rather than symbols or abbreviations when writing Figure axis labels to avoid confusing the reader. As an example, write the quantity �Magnetization�, or �Magnetization, M�, not just �M�. If including units in the label, present them within parentheses. Do not label axes only with units. In the example, write �Magnetization (A/m)� or �Magnetization {A[m(1)]}�, not just �A/m�. Do not label axes with a ratio of quantities and units. For example, write �Temperature (K)�, not �Temperature/K.�
+
+\section{CONCLUSIONS}
+
+A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
+
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{APPENDIX}
+
+Appendixes should appear before the acknowledgment.
+
+\section*{ACKNOWLEDGMENT}
+
+The preferred spelling of the word �acknowledgment� in America is without an �e� after the �g�. Avoid the stilted expression, �One of us (R. B. G.) thanks . . .�  Instead, try �R. B. G. thanks�. Put sponsor acknowledgments in the unnumbered footnote on the first page.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+References are important to the reader; therefore, each citation must be complete and correct. If at all possible, references should be commonly available publications.
+
+
+
+\begin{thebibliography}{99}
+
+\bibitem{c1} G. O. Young, �Synthetic structure of industrial plastics (Book style with paper title and editor),� 	in Plastics, 2nd ed. vol. 3, J. Peters, Ed.  New York: McGraw-Hill, 1964, pp. 15�64.
+\bibitem{c2} W.-K. Chen, Linear Networks and Systems (Book style).	Belmont, CA: Wadsworth, 1993, pp. 123�135.
+\bibitem{c3} H. Poor, An Introduction to Signal Detection and Estimation.   New York: Springer-Verlag, 1985, ch. 4.
+\bibitem{c4} B. Smith, �An approach to graphs of linear forms (Unpublished work style),� unpublished.
+\bibitem{c5} E. H. Miller, �A note on reflector arrays (Periodical style�Accepted for publication),� IEEE Trans. Antennas Propagat., to be publised.
+\bibitem{c6} J. Wang, �Fundamentals of erbium-doped fiber amplifiers arrays (Periodical style�Submitted for publication),� IEEE J. Quantum Electron., submitted for publication.
+\bibitem{c7} C. J. Kaufman, Rocky Mountain Research Lab., Boulder, CO, private communication, May 1995.
+\bibitem{c8} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, �Electron spectroscopy studies on magneto-optical media and plastic substrate interfaces(Translation Journals style),� IEEE Transl. J. Magn.Jpn., vol. 2, Aug. 1987, pp. 740�741 [Dig. 9th Annu. Conf. Magnetics Japan, 1982, p. 301].
+\bibitem{c9} M. Young, The Techincal Writers Handbook.  Mill Valley, CA: University Science, 1989.
+\bibitem{c10} J. U. Duncombe, �Infrared navigation�Part I: An assessment of feasibility (Periodical style),� IEEE Trans. Electron Devices, vol. ED-11, pp. 34�39, Jan. 1959.
+\bibitem{c11} S. Chen, B. Mulgrew, and P. M. Grant, �A clustering technique for digital communications channel equalization using radial basis function networks,� IEEE Trans. Neural Networks, vol. 4, pp. 570�578, July 1993.
+\bibitem{c12} R. W. Lucky, �Automatic equalization for digital communication,� Bell Syst. Tech. J., vol. 44, no. 4, pp. 547�588, Apr. 1965.
+\bibitem{c13} S. P. Bingulac, �On the compatibility of adaptive controllers (Published Conference Proceedings style),� in Proc. 4th Annu. Allerton Conf. Circuits and Systems Theory, New York, 1994, pp. 8�16.
+\bibitem{c14} G. R. Faulhaber, �Design of service systems with priority reservation,� in Conf. Rec. 1995 IEEE Int. Conf. Communications, pp. 3�8.
+\bibitem{c15} W. D. Doyle, �Magnetization reversal in films with biaxial anisotropy,� in 1987 Proc. INTERMAG Conf., pp. 2.2-1�2.2-6.
+\bibitem{c16} G. W. Juette and L. E. Zeffanella, �Radio noise currents n short sections on bundle conductors (Presented Conference Paper style),� presented at the IEEE Summer power Meeting, Dallas, TX, June 22�27, 1990, Paper 90 SM 690-0 PWRS.
+\bibitem{c17} J. G. Kreifeldt, �An analysis of surface-detected EMG as an amplitude-modulated noise,� presented at the 1989 Int. Conf. Medicine and Biological Engineering, Chicago, IL.
+\bibitem{c18} J. Williams, �Narrow-band analyzer (Thesis or Dissertation style),� Ph.D. dissertation, Dept. Elect. Eng., Harvard Univ., Cambridge, MA, 1993. 
+\bibitem{c19} N. Kawasaki, �Parametric study of thermal and chemical nonequilibrium nozzle flow,� M.S. thesis, Dept. Electron. Eng., Osaka Univ., Osaka, Japan, 1993.
+\bibitem{c20} J. P. Wilkinson, �Nonlinear resonant circuit devices (Patent style),� U.S. Patent 3 624 12, July 16, 1990. 
+
+
+
+
+
+
+\end{thebibliography}
+
+
+
+
+\end{document}
