@@ -22,10 +22,11 @@
 %\usepackage{amsmath} % assumes amsmath package installed
 %\usepackage{amssymb}  % assumes amsmath package installed
 
-\usepackage{graphics}
+\usepackage{graphicx}
 \usepackage{amsmath} 
 \usepackage{amssymb}
 \usepackage{multirow}
+\usepackage{subfigure}
 
 \def\degree{${}^{\circ}$}
 	  
@@ -34,7 +35,7 @@ Robot Path Planning Using Newton-Raphson method Based on RRT-GD
 }
 
 
-\author{Junxiang Ge, Chunfang Liu, Fuchun Sun$^{1}$% <-this % stops a space
+\author{Junxiang Ge, Fuchun Sun, Chunfang Liu$^{1}$% <-this % stops a space
 %\thanks{*This work was not supported by any organization}% <-this % stops a space
 \thanks{$^{1}$State Key Lab of Intelligent Technology and Systems, Tsinghua National Laboratory for Information Science and Technology (TNList), Department of Computer Science and Technology, Tsinghua University.
         {\tt\small gejx14@mails.tsinghua.edu.cn, fcsun@tsinghua.edu.cn}}%
@@ -52,7 +53,7 @@ Robot Path Planning Using Newton-Raphson method Based on RRT-GD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-We proposed a method on 7-arm redundant manipulator for obstacle-avoiding path planning. As we all know, RRT (rapidly-exploring random tree) method can perform well when doing obstacle-avoiding works. But the traditional RRT method concentrates mainly on the status space(S-space), it can’t predict the end actuator’s trajectory, thus ending up with the separation between end actuator and robot joints. In this paper, we use RRT method in the configuration space(C-space), concentrating on both the end actuator’s status and the joints’ movements. In order to reduce the time for path planning, i.e., reduce the steps when doing RRT, we change RRT algorithm to be goal-direction (we call it RRT-GD), adapt to our common works. With this improve, we can see in this paper that result could be reached in less than 10 steps usually, while the original RRT algorithm needs often more than 100 steps doing the same task. In addition, we apply Newton-Raphson method to RRT to do inverse kinematics optimization, thus we can focus on both the S-space and C-Space. In the end, we use quintic polynomial to smooth the planning path.
+We proposed a new method on 7-arm redundant manipulator for obstacle-avoiding path planning. As we all know, RRT (rapidly-exploring random tree) algorithm performs well when doing obstacle-avoiding works, but sometimes it is not fast enough and less goal-direction. In this paper, we use RRT method in the configuration space(C-space), concentrating on both the end actuator’s status and the joints’ movements. In order to reduce the time for path planning, i.e., reduce the steps when doing RRT, we change RRT algorithm to be goal-direction (we call it RRT-GD), to be adapted to our common works. With this improve, we can see in this paper that result could be reached in less than 10 steps usually, while the original RRT algorithm needs often more than 100 steps doing the same task. In addition, we apply Newton-Raphson method to do inverse kinematics optimization, thus we can focus on both the status space(S-space) and C-Space. In the end, we use quintic polynomial to smooth the planning path.
 
 \end{abstract}
 
@@ -64,7 +65,7 @@ As we all know, RRT (Rapidly-exploring random tree) is rapidly used in obstacle-
 \begin{itemize}
 \item RRT method attends to explore unknown space. 
 \item The graph constructed by RRT will gradually fill up the feasible space if the exploring times is enough.
-\item RRT method don’t need precise modeling, instead, it only needs the information that if a point is obstacle free through collision detect. Thus ending up with the high efficiency of obstacle free planning.
+\item RRT method don't need precise modeling of the obstacles, instead, it only needs the information if or not a point is obstacle free through doing collision detect, thus ending up with the high efficiency of obstacle free planning.
 \end{itemize}
 
 Though it has these advantages, RRT will still perform low planning success rate when there is a great deal of obstacle surround, or the free degree of manipulator is high. In this way, Kuffner proposed a bidirectional RRT algorithm, bi-RRT, also called RRT-connect. Within this method, two trees were built based on the initial point and goal point separately. When expanding each time, the tree of initial point will extend to the other tree, or the contrary way, until the two trees meets. For it has goal heuristic, it improves the success rate of path planning.  
@@ -428,7 +429,7 @@ MLG method is also a iteration method, using the gradient of current point as th
 Time, iteration times, accuracy compare figure locating here.
 
 \begin{table*}[h]
-\caption{$Comparation\ between\ RRT\ and\ $ Newton-Raphson $ method.\ q_{0} = [0.7854;0.5236;0;0.5236;0;0.5236;0];\ X_{0}=[0.5045;0.5045;0.7223;2.3562;1.5708;-1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\surd'\ means\ successful.\ `\times'\ means\ result\ failed,\ i.e.,\ bias\ (accuracy)\ comes\ out\ more\ than\ 0.1m.$}
+\caption{$Comparation\ between\ RRT\ and\ $ Newton-Raphson $ method.\ S_{0} = [0.7854;0.5236;0;0.5236;0;0.5236;0](rad);\ X_{0}=[0.5045;0.5045;0.7223;2.3562;1.5708;-1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\surd'\ means\ successful.\ `\times'\ means\ result\ failed,\ i.e.,\ bias\ (accuracy)\ comes\ out\ more\ than\ 0.1m.$}
 \label{table2}
 \begin{center}
 \begin{tabular}{c|c|c|c|c|c|c}
@@ -591,11 +592,167 @@ Using (17), we can get a smooth path. When $t = 0s$, $S(t)$ equals to $S_{0}$, t
 
 When finishing the work above, we can already finishing any work in the work space in theory. But just as the problem we have mentioned in chapter 3, both RRT and its modified method have the great opportunity to explore unuseful space which we don't need in our daily task, i.e., it lacks goal-direction. In order to solve this problem, taking the normal task in our experiment circumstance into account, we turn our sights to the `sample' function in RRT. Simple to find that if we just don't use a whole space sample method, but limit it to a useful space, we can decide the extend direction of RRT tree $T$, that is the kernel principle within our modified RRT method called RRT-GD.
 
-Originally, `sample' method is random in the whole work space, and thus then extend direction is all-around. The sketch map can be seen in Fig. 6. When we use a space containning the goal point $X_{0}$, which can simply be a sphere with $X_{0}$ centering (of course other shape also works, e.g., cuboid), the extending direction can be limit to goal-direction, as Fig.6 shows. In our program, we implement sample method with both sphere mode and cuboid mode, both work well with our daily task. We can see the comparation between RRT and RRT-GD with time property.
+Originally, `sample' method is random in the whole work space, and thus then extend direction is all-around. The sketch map can be seen in Fig. 5. When we use a space containning the goal point $X_{0}$, called sample space $A_{sam}$, which can simply be a sphere with $X_{0}$ centering (of course other shapes also works, e.g., cuboid), the extending direction can be limit to goal-direction, as Fig.5 shows. 
+
+In our program, we implement sample method with both sphere mode and cuboid mode, both work well with our daily task. We call the space given by `sample' function the sample space $A_{sam}$. We can see the comparation between RRT and RRT-GD within iteration times and time property in table 3.
+
+\begin{figure*}[thpb]
+      \centering
+      \framebox{
+      \parbox{7in}{
+      \subfigure[Extend direction of RRT: all-direction.]
+      {
+      \label{Subfig.1}
+      \includegraphics[width=8cm, height=4.2cm]{ext2whole.eps}	
+      }
+      \subfigure[Extend direction of RRT-GD: goal-direction.]
+      {
+      \label{Subfig.2}
+      \includegraphics[width=8cm, height=4.2cm]{ext2sample.eps}	
+      }
+      }
+      }
+      \caption{Extend direction of RRT and RRT-GD. Pink cuboid is for the whole working space. Blue sphere is for sample space. }
+      \label{figurelabe5}
+\end{figure*}
+
+\begin{table*}[h]
+\caption{$Comparation\ between\ $RRT$\ and\ $RRT-GD$\ method.\ S_{0} = [-0.2618;-0.2618;0;-1.3090;0;-1.3962;0](rad);\ X_{0}=[0.4011;0.1075;0.3115;-1.8326;2.9671;1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\times'\ means\ result\ failed.$}
+\label{table3}
+\begin{center}
+\begin{tabular}{c|c|c|c|c|c}
+\hline
+No. & task(m) & Method & extending times & failed extending times &time spent($s$) \\
+\hline
+\multirow{2}{*}{1}  &
+\multirow{2}{*}{
+$
+\begin{array}{l}
+X_{g} = 
+\left[
+\begin{array}{c}
+0.42; 
+-0.22;
+0.22;
+-1.83;
+2.97;
+-1.57
+\end{array}
+\right] \\
+dist = 0.7108.
+\end{array}
+$}
+  & RRT & 808 & 8401 & 108.20 \\
+\cline{3-6}
+  &    &  RRT-GD & 9 & 27 & 0.44 \\
+\hline
+\multirow{2}{*}{2} & 
+\multirow{2}{*}{
+$
+\begin{array}{l}
+X_{g} = 
+\left[
+\begin{array}{c}
+0.42;
+0.22;
+0.22;
+-1.83;
+2.80;
+-1.50
+\end{array}
+\right] \\
+dist = 0.6668.
+\end{array}
+$
+}
+& RRT & 506 & 4250 & 47.39 \\
+\cline{3-6}
+ &     &  RRT-GD & 3 & 1 & 0.16 \\
+\hline
+\multirow{2}{*}{3}
+&
+\multirow{2}{*}{
+$
+\begin{array}{l}
+X_{g} = 
+\left[
+\begin{array}{c}
+0.51;
+0.12;
+0.22;
+-1.73;
+2.90;
+-1.57
+\end{array}
+\right] \\
+dist = 0.7326;
+\end{array}
+$
+}
+& RRT & \multicolumn{3}{c}{$\times$} \\
+\cline{3-6}
+ &    & RRT-GD & 4 & 6 & 0.219 \\
+ \hline
+\end{tabular}
+\end{center}
+\end{table*}
+
+We take the same initial point as $S_{0}$ in table 3, and let the end manipulator go to different goal points. The `extending times' in table 3 is the total times of successful extending when finding the exact path to goal point, and so `failed extending times' means the total failed times. The altogether iteration is their sum. For RRT-GD here, we use a sphere whose radius is 0.5$m$ with goal point centering to do `sample' method. One point that should be reminded is that the result below is one time among many tests, which is the mid-value within these tests. From Table III and Fig. 5, we can learn that:
+
+\begin{itemize}
+
+\item RRT-GD uses much less time and iteration times compared to RRT when doing the same work. As we can see, RRT-GD can attends to be 100 times faster, speeding up the algorithm remarkably.
+\item RRT-GD can almost to be realtime path planning in these tasks, with planning time less than 0.5$s$, that is great when comparing to the traditional RRT method.
+\item RRT-GD can do the task that RRT cannot, as see in task 3 of table 3. Here, we set the iteration times limitation to 10000,  surpassing which we think the algorithm failed. In task 3, we do RRT method for 10 times but none of them succeed, while RRT-GD could always succeed.
+\item Within our experiments, RRT-GD could succeed as long as RRT method succeed, i.e., the correctness of RRT-GD can be assured.
+\item Since RRT-GD uses less iteration times, so the planning path gived by RRT-GD since to be more directly, i.e., less zig-zag on the path, which can be seen in Fig. 6.
+
+\end{itemize}
+
+
+
+Note that we just return one successful result in table 3 when doing these tasks. Of course, we could also set iteration times to a fix number, then use RRT-GD method to get multiple paths and get the best as output. When doing these way, says iteration times limitation to 10000, RRT-GD can always get more paths than RRT method.
+
+One more to say, RRT-GD is a modification of RRT algorithm. It changes the `sample' method of RRT algorithm. We can think of the two peaks of RRT-GD. One situation is when sample space fill up the whole working space, i.e., $A_{sam} = A_{0}$. At this time, RRT-GD algorithm attends to be RRT method, i.e., they are the same when running. Another situation is that when sample space shrinks to only one point, i.e., $A_{sam} = {X_{goal}}$, Then the situation becomes a straight line path planning from the initial point to goal point. In fact, since we can't give the whole space an accuracy limitation, RRT method itself thus can't ensure giving a path even the path exists, i.e., it isn't even correct in theory. So RRT-GD is an important ideology which proves to be more pratical, press closer to the real circumstance and daily common tasks. 
+
+\begin{figure*}[thpb]
+      \centering
+      \framebox{
+      \parbox{7in}{
+      \subfigure[RRT in Group No.1 of table 3]
+      {
+      \label{Subfig.1}
+      \includegraphics[width=8cm, height=4.2cm]{RRT1.eps}	
+      }
+      \subfigure[RRT-GD in Group No.1 of table 3]
+      {
+      \label{Subfig.2}
+      \includegraphics[width=8cm, height=4.2cm]{RRTGDNICE.eps}	
+      }
+      }
+      }
+      
+      \framebox{
+      \parbox{7in}{
+      \subfigure[RRT in Group No.2 of table 3]
+      {
+      \label{Subfig.3}
+      \includegraphics[width=8cm, height=4.2cm]{RRT2.eps}
+      }
+      \subfigure[RRT-GD in Group No.1 of table 3]
+      {
+      \label{Subfig.4}
+      \includegraphics[width=8cm, height=4.2cm]{RRTGD2.eps}	
+      }
+      }
+      }
+      \caption{Result comparation between RRT and RRT-GD. The blue sphere is the sample method sphere we use with goal point centering in red. The range of pink cuboid is our whole work space. The yellow sphere or cuboid is obstacle in the free space. The crayon line is the planning path starting from initial point to goal point. }
+      \label{figurelabe6}
+\end{figure*}
 
 \section{CONCLUSIONS}
 
-In this paer, we introduce a new method in obstacle-avoiding path planning, with modified RRT method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. After that, we find the less goal-direction with RRT and its modified algorithm, so we implement RRT-GD to solve this problem. With RRT-GD, we can accomplish daily works faster and more efficient.
+In this paer, we introduce a new method in obstacle-avoiding path planning, with modified RRT method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. After that, we find the less goal-direction with RRT and its modified algorithm, so we implement RRT-GD to solve this problem. With RRT-GD, we can accomplish daily works faster and more efficient, usually 10~100times faster than the usual RRT method because of its goal-direction property. Note that when the sample space of RRT-GD is not full of the whole working space, RRT-GD may not give a right planning path when in RRT in theory, i.e., it is not a usual method. However, RRT-GD works well in practice, as we can see in TABLE III and Fig. 6, for that in our common working space, there are usually not so many obstacles and the size of each obstacle are usually small enough for RRT-GD to work on.
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
