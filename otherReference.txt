@@ -1,0 +1,6 @@
+\bibitem{c6} Incremental Kinesthetic Teaching of Motion Primitives Using the Motion Refinement Tube, Dongheui Lee, Chritian Ott, Autonomous Robots, 2011, 31(2-3):115-131.
+\bibitem{c7} New Heuristic Algorithms for Efficient Hierarchical Path Planning,  David Zhu and Jean-Claude Latombe, IEEE Transactions on Robotics \& Automation, 1991.7(1):9-20.
+\bibitem{c8} A Subdivision Algorithm in Configuration for Findpath with Rotation, Rodney A. Brooks, Tomas Lozano-Perez, Systems Man \& Cybemetics IEEE Transactions on, 1985, SMC-15(2):244-233.
+\bibitem{c9} Motion Planning and Skill Transfer of Anthropomorphic Arms Based on Movement Primitives£¬Xilun Ding, Cheng Fang, International Conference on Mechatronics \& Automation, 2012:303-310.
+\bibitem{c12} Virtual Reality in the Loop ¨C Providing an Interface for an Intelligent Rule Learning and Planning System, Jurgen Rossmann, Christian Schlette, Nils Wantia, IEEE International Conference on Robotics \& Automation, 2013.
+\bibitem{c3} A Methodology for Intelligent Path Planning, Suman Chakravorty, John L. Junkins, Department of Aerospace Engineering, Texas A\&M University Young, College Station.
