@@ -29,6 +29,7 @@
 \usepackage{multirow}
 \usepackage{subfigure}
 \usepackage{graphicx,epstopdf}
+\usepackage{cite}
 \def\degree{${}^{\circ}$}
 	
 \title{\LARGE \bf
@@ -58,7 +59,7 @@ Rapidly-exploring random trees (RRT) method performs well for obstacle-avoiding 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
- Rapidly-exploring random trees (RRT) method was proposed by SM Lavalle and JJ Kuffner [1], which is a suitable way to be used in obstacle-avoiding path planning for mobile robot or multiple freedom manipulator. It constructs a graph with obstacle free points in feasible space based on random sampling, in which the optimal path is searched from the initial point to the goal point. There are also many other intelligent path planning methods [9-11]. Compared with them, RRT method attends to explore unknown space so that the graph constructed by RRT will gradually fill up the feasible space as long as the exploring times is enough. Besides, RRT method don't need precise modeling of the obstacles, instead, it only needs the information if or not a point is obstacle free through doing collision detect, thus ending up with the high efficiency of obstacle-free path planning.
+ Rapidly-exploring random trees (RRT) method was proposed by SM Lavalle and JJ Kuffner [1], which is a suitable way to be used in obstacle-avoiding path planning for mobile robot or multiple freedom manipulator. It constructs a graph with obstacle free points in feasible space based on random sampling, in which the optimal path is searched from the initial point to the goal point. There are also many other intelligent path planning methods [9, 10, 11]. Compared with them, RRT method attends to explore unknown space so that the graph constructed by RRT will gradually fill up the feasible space as long as the exploring times is enough. Besides, RRT method don't need precise modeling of the obstacles, instead, it only needs the information if or not a point is obstacle free through doing collision detect, thus ending up with the high efficiency of obstacle-free path planning.
 
 Though it has the above advantages, RRT method will still perform low success rate of planning when there is many obstacles surrounded, or the free space is too large to explore. For these problems, JJ Kuffner and SM Lavalle [2, 3] proposed a bi-directional RRT algorithm (bi-RRT) that two trees were built based on the initial point and the goal point separately. When expanding each time, the tree of initial point will extend to the goal-point based tree, or the contrary way, until these two trees meets. Because of goal heuristic, this approach improves the success rate of path planning. In spite of this modification, we still find it defective sometimes for path planning.
 
@@ -661,7 +662,7 @@ Note that we return the program immediately if it finds the planned path from in
 
 \section{CONCLUSIONS}
 
-In this paper, we introduce a new method in obstacle-avoiding path planning, with RRT-GD method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. With RRT-GD, we can accomplish daily works faster and more efficient, usually 10$\sim$100 times faster than the usual RRT method because of its goal-directionality property. Note that when the sample space of RRT-GD is not full of the whole working space, RRT-GD may not give a right planning path as RRT in theory, i.e., it is not a universal relevance method. However, RRT-GD works well in practice, as we can see in the exprements, for that in our common working space, there are usually not so many obstacles and the size of each obstacle are usually small enough for RRT-GD to work on well. In the future, we will make improvements on the shortcomings of RRT-GD without varifying the sample space.
+In this paper, we introduce a new method in obstacle-avoiding path planning, with RRT-GD method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. With RRT-GD, we can accomplish daily works faster and more efficient, usually 10$\sim$100 times faster than the usual RRT method because of its goal-directionality property. Sometimes it is neccessary that we need to change the size of sample space to fit the pratical use. In the future, we will focus on this shortcomings of RRT-GD and make improments.
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
