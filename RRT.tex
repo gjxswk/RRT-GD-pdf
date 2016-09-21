@@ -29,7 +29,6 @@
 \usepackage{multirow}
 \usepackage{subfigure}
 \usepackage{graphicx,epstopdf}
-\usepackage{cite}
 \def\degree{${}^{\circ}$}
 	
 \title{\LARGE \bf
@@ -59,13 +58,13 @@ Rapidly-exploring random trees (RRT) method performs well for obstacle-avoiding 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
- Rapidly-exploring random trees (RRT) method was proposed by SM Lavalle and JJ Kuffner [1], which is a suitable way to be used in obstacle-avoiding path planning for mobile robot or multiple freedom manipulator. It constructs a graph with obstacle free points in feasible space based on random sampling, in which the optimal path is searched from the initial point to the goal point. There are also many other intelligent path planning methods [9, 10, 11]. Compared with them, RRT method attends to explore unknown space so that the graph constructed by RRT will gradually fill up the feasible space as long as the exploring times is enough. Besides, RRT method don't need precise modeling of the obstacles, instead, it only needs the information if or not a point is obstacle free through doing collision detect, thus ending up with the high efficiency of obstacle-free path planning.
+ Rapidly-exploring random trees (RRT) method was proposed by SM Lavalle and JJ Kuffner [1], which is a suitable way to be used in obstacle-avoiding path planning for mobile robot or multiple freedom manipulator. It constructs a graph with obstacle free points in feasible space based on random sampling, in which the optimal path is searched from the initial point to the goal point. There are also many other intelligent path planning methods [9-11]. Compared with them, RRT method attends to explore unknown space so that the graph constructed by RRT will gradually fill up the feasible space as long as the exploring times is enough. Besides, RRT method don't need precise modeling of the obstacles, instead, it only needs the information if or not a point is obstacle free through doing collision detect, thus ending up with the high efficiency of obstacle-free path planning.
 
 Though it has the above advantages, RRT method will still perform low success rate of planning when there is many obstacles surrounded, or the free space is too large to explore. For these problems, JJ Kuffner and SM Lavalle [2, 3] proposed a bi-directional RRT algorithm (bi-RRT) that two trees were built based on the initial point and the goal point separately. When expanding each time, the tree of initial point will extend to the goal-point based tree, or the contrary way, until these two trees meets. Because of goal heuristic, this approach improves the success rate of path planning. In spite of this modification, we still find it defective sometimes for path planning.
 
 As mentioned before, RRT attends to explore the whole space. However, for goal-reaching works, it doesn't need to explore the whole space in the most time. What we need to do is to find a feasible way from the initial point to the goal point without obstacle collision, i.e., only a part of the whole space is necessary for exploration. Thus, in this paper, we propose a modified RRT method with goal directionality (RRT-GD) for path planning with goal-directionality exploration. The experiments demonstrate that the proposed method could quickly accomplish the obstacle avoiding path planning and the planning speed is 10 times faster than that of the original RRT method.
 
-On the other hand, for performing the redundant manipulator motion, it is necessary to transform each point in the path tree from the configuration space (C-space) to robots' joint space by using the inverse kinematics optimization. There are lots of methods to do inverse kinematics optimization for redundant manipulator, e.g., MLG (most likeyly gradient method) [4, 5], WLN (weighted least norm method) [6], Genetic Algorithm [7], GP (gradient projection method), etc. In this paper, Newton-Raphson method is adopted to perform the inverse kinematics optimization work. In order to make comparation, we also implement MLG method in our exprements according to [4, 5]. Compared to other methods, Newton-Raphson method has faster converging speed and more accurate result that it takes less than 10 iteration times (usually 5 or 6 times) and has deviations less than 1 micrometers. Finally, the quintic polynomial approach [8] is utilized to smooth the planned path.
+On the other hand, for performing the redundant manipulator motion, it is necessary to transform each point in the path tree from the configuration space (C-space) to robots' joint space by using the inverse kinematics optimization. There are lots of methods to do inverse kinematics optimization for redundant manipulator, e.g., MLG (Most Likeyly Gradient method) [4, 5], WLN (@eighted Least Norm method) [6], Genetic Algorithm [7], GP (Gradient Projection method), etc. In this paper, Newton-Raphson method is adopted to perform the inverse kinematics optimization work. In order to make comparison, we also implement MLG method in our exprements according to [4, 5]. Compared to other methods, Newton-Raphson method has faster converging speed and more accurate result that it takes less than 10 iteration times (usually 5 or 6 times) and has deviations less than 1 micrometers. Finally, the quintic polynomial approach [8] is utilized to smooth the planned path.
 
 \section{RRT with Extended Steps}
 
@@ -75,7 +74,7 @@ In this section, the original RRT method for obstacle-avoiding path planning is 
 
 The basic problem of RRT is how could we move the manipulator from the initial status to the goal status without collision with the obstacles in the space. To make it more clearly, we make appointments on the following mathematical symbols to express status space (S-space) and configuration space (C-space).
 
-We use $n$ to stand for the degree of freedom (DOF) of the robot manipulator, which is 7 in our exprement. So S-space is expressed with 7 parameters from $q_1$ to $q_7$, with the expression like (\ref{eq_status}):
+We use $n$ to stand for the degree of freedom (DOF) of the robot manipulator, which is 7 in our experiments. So S-space is expressed with 7 parameters from $q_1$ to $q_7$, with the expression like (\ref{eq_status}):
 
 \begin{equation}
 \label{eq_status}
@@ -89,7 +88,7 @@ As for the C-space, i.e., pose space, we use Euler angles that obeys Euler Z-X-Z
 X = (P,\gamma) = (x,y,z,\psi,\theta,\phi)
 \end{equation}
 
-Note that $n > m$ should be guatanteed since it is a redundant system. Therefore, we get the initial condition of collsion-free path planning problem as this: knowing the initial joints' angle $S_{0}\in \mathbb{R}^n$, the initial status of the end-effector $X_{0}\in \mathbb{R}^m$ (which could be computed from $S_{0}$), and the goal status of the end-effector $X_{g}\in \mathbb{R}^m$. The relevant notations and functions of RRT are illustrated as below:
+Note that $n > m$ should be guatanteed since it is a redundant system. Therefore, we get the initial condition of collision-free path planning problem as this: knowing the initial joints' angle $S_{0}\in \mathbb{R}^n$, the initial status of the end-effector $X_{0}\in \mathbb{R}^m$ (which could be computed from $S_{0}$), and the goal status of the end-effector $X_{g}\in \mathbb{R}^m$. The relevant notations and functions of RRT are illustrated as below:
 
 \begin{itemize}
 
@@ -169,7 +168,7 @@ In our algorithm, an `rrtDistance' method is employed for calculating the distan
  \label{eq_rrtDistance}
  \end{equation}
 
- In our exprements, we choose $\alpha > 0.5$, e.g., $\alpha = 0.8$. The \textit{sample} function generates a point $A_{0}$ that $X_{min} < A_{0} < X_{max}$. Then, the random point $X_{ram}$ is produced with the \textit{sample} function as shown in  (\ref{eq_sample}).
+ In our experiments, we choose $\alpha > 0.5$, e.g., $\alpha = 0.8$. The \textit{sample} function generates a point $A_{0}$ that $X_{min} < A_{0} < X_{max}$. Then, the random point $X_{ram}$ is produced with the \textit{sample} function as shown in  (\ref{eq_sample}).
 
  \begin{equation}
  X_{ram} = X_{min} + t \times (X_{max}-X_{min}), 0<t<1;
@@ -259,7 +258,7 @@ With this change, RRT-GD needs less extending times and the tree it builds will 
 
 \end{itemize} 
 
-As we can see later in our exprements, RRT-GD could work faster and better than RRT almost all the time.
+As we can see later in our experiments, RRT-GD could work faster and better than RRT almost all the time.
 
 \section{Inverse Kinematics with Newton-Raphson method}
 
@@ -316,11 +315,11 @@ a_{0} = &S_{0};\\
 \label{eq_quintic}
 \end{equation}
 
-\section{Experiments}
+\section{Experiment Results }
 
 \subsection{Experiment Environment}
 
-We use a 7-DOF (degree of freedom) robot manipulator, show in Fig. \ref{robotGraph} to test the results in our experiment. Then we use the D-H method (Denavit and Hartenberg method) to model our robot arm, with the model axis built obeying D-H parameter method as the Fig. \ref{robotAxisGraph} shows.
+The proposed method is testd by using a 7-DOF (degree of freedom) Schunk redundant manipulator as show in Fig. \ref{robotGraph}. Then Fig.6 displays the coordinate system of each joint of the manipulator. We use the D-H method (Denavit and Hartenberg method) to model the robot arm for performing robot's kinematics. Table \ref{table_robot} shows the D-H parameters of the Schunk manipulator.
 
    \begin{figure}[thpb]
       \centering
@@ -328,7 +327,7 @@ We use a 7-DOF (degree of freedom) robot manipulator, show in Fig. \ref{robotGra
       %\parbox{2in}{
       \includegraphics{robotArm.eps}%}
       %}
-      \caption{7-DOF robot arm}
+      \caption{7-DOF Schunk manipulator}
       \label{robotGraph}
    \end{figure}
 
@@ -338,19 +337,17 @@ We use a 7-DOF (degree of freedom) robot manipulator, show in Fig. \ref{robotGra
       \parbox{1.2in}{
       \includegraphics[height=4cm]{robotaxis.eps}}
       }
-      \caption{Robot axis coordinates, obeying D-H parameter method. Numbers in the graph is in milimeter.}
+      \caption{Robot axis coordinates, obeying D-H parameter method. Numbers in the graph is in millimeter.}
       \label{robotAxisGraph}
    \end{figure}
 
-As a result of this axis coordinates, we get the DH parameters  (show in Table \ref{table1}) from it, which is the key data used in our procedure.
-
 \begin{table}[h]
 \caption{$DH\ Parameters\ of\ robot.\ (\theta: joint\ angle;\ d: connecting\ rod\ skew;\ a: connecting\ rod;\ \alpha: tortuosity\ angle\ of\ connecting\ rod.)$}
-\label{table1}
+\label{table_robot}
 \begin{center}
 \begin{tabular}{c|ccccc}
 \hline
-Joint Number & $\theta_i$ & $d_i$(mm) & $a_i$(mm) & ${\alpha_i}$(\degree) & area of $\theta_i$(\degree) \\
+Joint Number & $\theta_i$ & $d_i$(mm) & $a_i$(mm) & ${\alpha_i}$(\degree) & area of $\theta_i$(\degree)\\
 \hline
 1 & $q_1$ & 300 & 0 & -90 & -180$\sim$180\\
 2 & $q_2$ & 0 & 0 & 90 & -90$\sim$90 \\
@@ -364,12 +361,23 @@ Joint Number & $\theta_i$ & $d_i$(mm) & $a_i$(mm) & ${\alpha_i}$(\degree) & area
 \end{center}
 \end{table}
 
-\subsection{Comparation between Newton-Raphson and MLG}
+\subsection{Comparison between Newton-Raphson and MLG}
 
-MLG (most likely gradient) method is also a iteration method, using the gradient of current point as the iteration direction, the detail of which can be seen in [4, 5]. We implement it and then make comparation between MLG and Newton-Raphson method.
+In this subsection, we make a comparison between two inverse kinematics approaches, Newton-Raphson and MLG (Most Likely Gradient). MLG (most likely gradient) method is also an iteration method, using the gradient of current point as the iteration direction, the detail of which can be seen in [4, 5]. 
+
+Four groups of experiments has been done within this comparison. These tests start with the same initial point $q_0$, and so the same with $X_0$, and go to different goal point appointed by $X_{g}$. Note that the iteration times of MLG method is an input variable,  so we take 5, 10, and 20 iteration times here as representatives. As Table \ref{table_newton} shows, in these groups of exprements, we make sense that:
+
+\begin{itemize}
+
+\item  The time spent by Newton-Rapshon method is in the same order of magnitude with 5-iteration-times MLG method.
+\item  Newton-Raphson method usually ends up with bias no more than $10^{-6}m$, while MLG with deviation error higher than $10^{-3}m$.
+\item Newton-Raphson is suitified to more tasks when doing inverse kinematics, which can be proved in group 4, with Newton-Raphson method successful and MLG failed.
+\item When Newton-Raphson method fails, MLG method would also failed because they both use the gradient of current point. 
+
+\end{itemize}
 
 \begin{table*}[h]
-\caption{$Comparation\ between\ RRT\ and\ $ Newton-Raphson $ method.\ S_{0} = [0.7854;0.5236;0;0.5236;0;0.5236;0](rad);\ X_{0}=[0.5045;0.5045;0.7223;2.3562;1.5708;-1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\surd'\ means\ successful.\ `\times'\ means\ result\ failed,\ i.e.,\ bias\ (accuracy)\ comes\ out\ more\ than\ 0.1m.$}
+\caption{$Comparison\ between\ RRT\ and\ $ Newton-Raphson $ method.\ S_{0} = [0.7854;0.5236;0;0.5236;0;0.5236;0](rad);\ X_{0}=[0.5045;0.5045;0.7223;2.3562;1.5708;-1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\surd'\ means\ successful.\ `\times'\ means\ result\ failed,\ i.e.,\ bias\ (accuracy)\ comes\ out\ more\ than\ 0.1m.$}
 \label{table_newton}
 \begin{center}
 \begin{tabular}{c|c|c|c|c|c|c}
@@ -487,25 +495,14 @@ $
 \end{center}
 \end{table*}
 
-Four groups of experiments has been done within this comparation. These tests start with the same initial point $q_0$, and so the same with $X_0$, and go to different goal point appointed by $X_{g}$. Note that the iteration times of MLG method is an input variable,  so we take 5, 10, and 20 iteration times here as representatives. As Table \ref{table_newton} shows, in these groups of exprements, we make sense that:
-
-\begin{itemize}
-
-\item  The time spent by Newton-Rapshon method is in the same order of magnitude with 5-iteration-times MLG method.
-\item  Newton-Raphson method usually ends up with bias no more than $10^{-6}m$, while MLG with deviation error higher than $10^{-3}m$.
-\item Newton-Raphson is suitified to more tasks when doing inverse kinematics, which can be proved in group 4, with Newton-Raphson method successful and MLG failed.
-\item When Newton-Raphson method fails, MLG method would also failed because they both use the gradient of current point. 
-
-\end{itemize}
-
 Minded that whether the result fail or success doesn't depend on `dist' parameter, it is decided by many reasons. Sometimes a small `dist' even like $0.02m$ may also result in failed both for Newton-Raphson method and MLG method.
 
-\subsection{Comparation between RRT-GD and RRT}
+\subsection{Comparison between RRT-GD and RRT}
 
-We implement our `sample' method with sample space in sphere shape of radius set to $0.5m$ for RRT-GD. We can see the comparation between RRT and RRT-GD in TABLE \ref{table_RRTGD}.
+This subsection compares the effectiveness of the proposed RRT-GD method with RRT method. For the proposed RRT-GD method, the sphere radius of the sample space is set as $0.5m$. Table \ref{table_RRTGD} shows the comparison results. The corresponding planned path of group 1 and 2 in TABLE \ref{table_RRTGD} is show in Fig. \ref{fig_final}.
 
 \begin{table*}[h]
-\caption{$Comparation\ between\ $RRT$\ and\ $RRT-GD$\ method.\ S_{0} = [-0.2618;-0.2618;0;-1.3090;0;-1.3962;0](rad);\ X_{0}=[0.4011;0.1075;0.3115;-1.8326;2.9671;1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\times'\ means\ result\ failed.$}
+\caption{$Comparison\ between\ $RRT$\ and\ $RRT-GD$\ method.\ S_{0} = [-0.2618;-0.2618;0;-1.3090;0;-1.3962;0](rad);\ X_{0}=[0.4011;0.1075;0.3115;-1.8326;2.9671;1.5708];\ dist = rrtDistance(X_{0}, X_{g}), all\ their\ units\ are\ meters(m). `\times'\ means\ result\ failed.$}
 \label{table_RRTGD}
 \begin{center}
 \begin{tabular}{c|c|c|c|c|c}
@@ -642,27 +639,27 @@ $
       }
       }
       }
-      \caption{Result comparation between RRT and RRT-GD. The blue sphere is the sample space we use with goal point centering in red. The range of pink cuboid is our whole work space. The yellow sphere or cuboid is obstacle. The crayon line is the planned path starting from initial point to goal point. }
+      \caption{Result comparison between RRT and RRT-GD. The blue sphere is the sample space we use with goal point centering in red. The range of pink cuboid is our whole work space. The yellow sphere or cuboid is obstacle. The crayon line is the planned path starting from initial point to goal point. }
       \label{fig_final}
 \end{figure*}
 
-We take the same initial point as $S_{0}$ in TABLE \ref{table_RRTGD}, and let the end manipulator go to different goal points. The total execution times for `extend' method, on which time is mainly spent on, is the sum of `successful extending times' and `failed extending times' in Table \ref{table_RRTGD}. One point which should be reminded is that the data in a group in TABLE \ref{table_RRTGD} is the best result within 10 tests (each group takes 10 tests). The corresponding planned path of group 1 and 2 in TABLE \ref{table_RRTGD} is show in Fig. \ref{fig_final}. From Table \ref{table_RRTGD} and Fig. \ref{fig_final}, we can learn that:
+The same initial point as $S_{0}$ in TABLE \ref{table_RRTGD}, and let the end effector of the manipulator go to different goal points. The total execution times for `extend' method, on which time is mainly spent on, is the sum of `successful extending times' and `failed extending times' in Table \ref{table_RRTGD}. It should be noted that the data in a group in TABLE \ref{table_RRTGD} is the best result within 10 tests (each group takes 10 tests). From Table \ref{table_RRTGD} and Fig. \ref{fig_final}, we can learn that:
 
 \begin{itemize}
 
 \item RRT-GD uses much less time and iteration times compared to RRT when doing the same work. As we can see, RRT-GD attends to be 10 times faster or more, speeding up the algorithm remarkably.
 \item RRT-GD can perform the path planning real-timely in these tasks, with planning time less than 0.5$s$, which is a great superior comparing to the traditional RRT method.
-\item RRT-GD can do the task that RRT can't, as in task 4 of Table \ref{table_RRTGD}. Here, we set the iteration times limitation to 10000,  surpassing which we think the algorithm failed. In task 4, we do RRT method for 10 times but none of them succeed, while RRT-GD could always succeed.
+\item RRT-GD can do the task that RRT can't, as in task 4 of Table \ref{table_RRTGD}. Here, we set the limitation of iteration times to 10000,  surpassing which we think the algorithm failed. In task 4, we do RRT method for 10 times but none of them succeed, while RRT-GD could always succeed.
 \item Within our experiments, RRT-GD could succeed as long as RRT method succeed. This is because there are usually not so many obstacles in the working space, and each obstacle is usually small enough (no more than 0.1$s$ in radius), while the radius of sample space is set to 0.5$m$, that is big enough to do common works with obstacle-avoiding.
-\item Since RRT-GD uses less iteration times, so the planned path gived by RRT-GD seems to be better, i.e., less zig-zag on the path.
-\item Multi-steps extending strategy shows in Fig. \ref{fig_multiExtend} works on well with RRT-GD since the extending directions is always goal-direction, so that it can speed up the process to reach goal.
+\item Since RRT-GD uses less iteration times, so the planned path given by RRT-GD seems to be better, i.e., less zig-zag on the path.
+\item Multi-steps extending strategy shows in Fig. \ref{fig_multiExtend} works on well with RRT-GD since the extending directions is always goal-direction, so that it can speed up the process to reach the goal.
 \end{itemize}
 
 Note that we return the program immediately if it finds the planned path from initial point to goal point when doing the tasks in Table \ref{table_RRTGD}. Of course, we could change it to get the best one as output in a certain iteration times. When doing these way, says iteration times limitation to 10000, RRT-GD can always get more paths out than RRT method, ending up with better planning path.
 
 \section{CONCLUSIONS}
 
-In this paper, we introduce a new method in obstacle-avoiding path planning, with RRT-GD method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. With RRT-GD, we can accomplish daily works faster and more efficient, usually 10$\sim$100 times faster than the usual RRT method because of its goal-directionality property. Sometimes it is neccessary that we need to change the size of sample space to fit the pratical use. In the future, we will focus on this shortcomings of RRT-GD and make improments.
+In this paper, we proposed a new method in obstacle-avoiding path planning, with RRT-GD method doing obstacle-avoiding, Newton-Raphson doing inverse kinematics, and quintic polynomial doing path smoothing. With RRT-GD, we can accomplish daily works faster and more efficient, usually 10$\sim$100 times faster than the usual RRT method because of its goal-directionality property. Sometimes it is necessary to change the size of sample space in RRT-GD method to fit the pratical use. In the future, we will make improvements on this shortcomings without varifying the sample space to make it more universal.
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
